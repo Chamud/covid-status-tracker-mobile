@@ -1,3 +1,5 @@
+import 'package:cst/pages/accounts/login.dart';
+import 'package:cst/pages/main/home.dart';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 
@@ -175,7 +177,12 @@ class _RegisterPageState extends State<RegisterPage> {
       children: <Widget>[
         Container(margin: const EdgeInsets.only(top: 5)),
         TextButton(
-          onPressed: () {},
+          onPressed: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => const LoginPage()),
+            );
+          },
           child: const Text("Already have an account? Login"),
         ),
       ],
@@ -212,7 +219,12 @@ class _RegisterPageState extends State<RegisterPage> {
           margin: const EdgeInsets.only(top: 2),
         ),
         TextButton(
-          onPressed: () {},
+          onPressed: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => const HomePage()),
+            );
+          },
           child: const Text(
             "Home",
             style: TextStyle(

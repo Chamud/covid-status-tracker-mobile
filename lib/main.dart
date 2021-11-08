@@ -1,14 +1,13 @@
-import 'package:cst/pages/accounts/login.dart';
-import 'package:cst/pages/accounts/register.dart';
 import 'package:cst/pages/main/home.dart';
+import 'package:cst/widges/drawer.dart';
 import 'package:flutter/material.dart';
 
 void main() {
-  runApp(const MyApp());
+  runApp(const CST());
 }
 
-class MyApp extends StatelessWidget {
-  const MyApp({Key? key}) : super(key: key);
+class CST extends StatelessWidget {
+  const CST({Key? key}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -17,7 +16,21 @@ class MyApp extends StatelessWidget {
       theme: ThemeData(
         primarySwatch: Colors.blue,
       ),
-      home: const LoginPage(),
+      home: const HomePage(),
     );
   }
+}
+
+class MainPage extends StatefulWidget {
+  const MainPage({Key? key}) : super(key: key);
+
+  @override
+  _MainPageState createState() => _MainPageState();
+}
+
+class _MainPageState extends State<MainPage> {
+  @override
+  Widget build(BuildContext context) => const Scaffold(
+        drawer: NavigationDrawerWidget(),
+      );
 }

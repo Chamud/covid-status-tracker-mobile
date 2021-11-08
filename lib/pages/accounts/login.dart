@@ -1,5 +1,10 @@
+import 'package:cst/models/token.dart';
+import 'package:cst/pages/accounts/register.dart';
+import 'package:cst/pages/main/home.dart';
+import 'package:cst/services/api.dart';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({Key? key}) : super(key: key);
@@ -10,6 +15,17 @@ class LoginPage extends StatefulWidget {
 
 class _LoginPageState extends State<LoginPage> {
   late String username, password;
+  late String token = 'Loading';
+  late Future<Token> futuretoken;
+  @override
+  void initState() {
+    super.initState();
+    fetchLogin().then((value) {
+      setState(() {
+        token = value.token;
+      });
+    });
+  }
 
   Widget _buildusernameRow() {
     return Column(
@@ -111,7 +127,12 @@ class _LoginPageState extends State<LoginPage> {
       children: <Widget>[
         Container(margin: const EdgeInsets.only(top: 5)),
         TextButton(
-          onPressed: () {},
+          onPressed: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => const RegisterPage()),
+            );
+          },
           child: const Text("Don't have an account? Register"),
         ),
       ],
@@ -125,7 +146,9 @@ class _LoginPageState extends State<LoginPage> {
       children: <Widget>[
         Container(margin: const EdgeInsets.only(top: 5)),
         TextButton(
-          onPressed: () {},
+          onPressed: () {
+            launch("https://covidstatustracker.herokuapp.com/reset_password/");
+          },
           child: const Text("Forgot your password? Reset"),
         ),
       ],
@@ -161,7 +184,12 @@ class _LoginPageState extends State<LoginPage> {
           margin: const EdgeInsets.only(top: 2),
         ),
         TextButton(
-          onPressed: () {},
+          onPressed: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => const HomePage()),
+            );
+          },
           child: const Text(
             "Home",
             style: TextStyle(
