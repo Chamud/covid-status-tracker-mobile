@@ -1,9 +1,11 @@
-import 'package:cst/models/token.dart';
+import 'dart:convert';
+
 import 'package:cst/pages/accounts/register.dart';
 import 'package:cst/pages/main/home.dart';
-import 'package:cst/services/api.dart';
+import 'package:http/http.dart' as http;
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 class LoginPage extends StatefulWidget {
@@ -15,17 +17,9 @@ class LoginPage extends StatefulWidget {
 
 class _LoginPageState extends State<LoginPage> {
   late String username, password;
-  late String token = 'Loading';
-  late Future<Token> futuretoken;
-  @override
-  void initState() {
-    super.initState();
-    fetchLogin().then((value) {
-      setState(() {
-        token = value.token;
-      });
-    });
-  }
+
+  TextEditingController usernameEditingController = TextEditingController();
+  TextEditingController passwordEditingController = TextEditingController();
 
   Widget _buildusernameRow() {
     return Column(
@@ -45,6 +39,7 @@ class _LoginPageState extends State<LoginPage> {
               borderRadius: BorderRadius.circular(30),
             ),
             child: TextFormField(
+              controller: usernameEditingController,
               keyboardType: TextInputType.text,
               style: const TextStyle(
                 color: Colors.black87,
@@ -77,6 +72,7 @@ class _LoginPageState extends State<LoginPage> {
               borderRadius: BorderRadius.circular(30),
             ),
             child: TextFormField(
+              controller: passwordEditingController,
               keyboardType: TextInputType.text,
               obscureText: true,
               autocorrect: false,
@@ -105,7 +101,101 @@ class _LoginPageState extends State<LoginPage> {
           width: 5 * (MediaQuery.of(context).size.width / 7),
           margin: const EdgeInsets.only(top: 25, bottom: 15),
           child: ElevatedButton(
-            onPressed: () {},
+            onPressed: () {
+              username = usernameEditingController.text;
+              password = passwordEditingController.text;
+              loginUser(un, pw) async {
+                const String mainURL =
+                    'https://covidstatustracker.herokuapp.com/api/';
+                final prefs = await SharedPreferences.getInstance();
+                const url = mainURL + 'login';
+                var reqBody = {
+                  'username': un,
+                  'password': pw,
+                };
+
+                http.Response response = await http.post(
+                  Uri.parse(url),
+                  body: reqBody,
+                );
+                if (response.statusCode == 200) {
+                  Map<String, dynamic> responseJson =
+                      json.decode(response.body);
+                  if (responseJson['Message'] == 'Success') {
+                    prefs.setString('username', un);
+                    prefs.setString('password', pw);
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (context) => const HomePage()),
+                    );
+                  } else {
+                    prefs.setString('username', 'none');
+                    prefs.setString('password', 'none');
+                    Future<void> _showErrDialog() async {
+                      return showDialog<void>(
+                        context: context,
+                        barrierDismissible: true,
+                        builder: (BuildContext context) {
+                          return AlertDialog(
+                            title: const Text('Login Error'),
+                            content: SingleChildScrollView(
+                              child: ListBody(
+                                children: <Widget>[
+                                  Text(responseJson['Message']),
+                                  const Text('Please try again'),
+                                ],
+                              ),
+                            ),
+                            actions: <Widget>[
+                              TextButton(
+                                child: const Text('OK'),
+                                onPressed: () {
+                                  Navigator.of(context).pop();
+                                },
+                              ),
+                            ],
+                          );
+                        },
+                      );
+                    }
+
+                    _showErrDialog();
+                  }
+                } else {
+                  Future<void> _showMyDialog() async {
+                    return showDialog<void>(
+                      context: context,
+                      barrierDismissible: true,
+                      builder: (BuildContext context) {
+                        return AlertDialog(
+                          title: const Text('Error'),
+                          content: SingleChildScrollView(
+                            child: ListBody(
+                              children: const <Widget>[
+                                Text('Failed to connect to the server.'),
+                                Text('Please try again later'),
+                              ],
+                            ),
+                          ),
+                          actions: <Widget>[
+                            TextButton(
+                              child: const Text('OK'),
+                              onPressed: () {
+                                Navigator.of(context).pop();
+                              },
+                            ),
+                          ],
+                        );
+                      },
+                    );
+                  }
+
+                  _showMyDialog();
+                }
+              }
+
+              loginUser(username, password);
+            },
             child: Text(
               "LOGIN",
               style: TextStyle(

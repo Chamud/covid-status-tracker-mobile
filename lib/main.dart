@@ -1,5 +1,5 @@
 import 'package:cst/pages/main/home.dart';
-import 'package:cst/widges/drawer.dart';
+import 'package:cst/widgets/drawer.dart';
 import 'package:flutter/material.dart';
 
 void main() {
@@ -30,7 +30,7 @@ class MainPage extends StatefulWidget {
 
 class _MainPageState extends State<MainPage> {
   @override
-  Widget build(BuildContext context) => const Scaffold(
+  Widget build(BuildContext context) => Scaffold(
         drawer: NavigationDrawerWidget(),
       );
 }

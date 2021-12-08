@@ -1,10 +1,15 @@
+import 'dart:convert';
+
 import 'package:cst/pages/accounts/login.dart';
 import 'package:cst/pages/main/home.dart';
+import 'package:cst/pages/tracker/editprofile.dart';
+import 'package:http/http.dart' as http;
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class RegisterPage extends StatefulWidget {
-  const RegisterPage({Key? key}) : super(key: key);
+  const RegisterPage({Key? key, cent, zoom}) : super(key: key);
 
   @override
   _RegisterPageState createState() => _RegisterPageState();
@@ -12,6 +17,11 @@ class RegisterPage extends StatefulWidget {
 
 class _RegisterPageState extends State<RegisterPage> {
   late String username, email, password1, password2;
+
+  TextEditingController usernameEditingController = TextEditingController();
+  TextEditingController emilEditingController = TextEditingController();
+  TextEditingController password1EditingController = TextEditingController();
+  TextEditingController password2EditingController = TextEditingController();
 
   Widget _buildusernameRow() {
     return Column(
@@ -31,6 +41,7 @@ class _RegisterPageState extends State<RegisterPage> {
               borderRadius: BorderRadius.circular(30),
             ),
             child: TextFormField(
+              controller: usernameEditingController,
               keyboardType: TextInputType.text,
               style: const TextStyle(
                 color: Colors.black87,
@@ -63,6 +74,7 @@ class _RegisterPageState extends State<RegisterPage> {
               borderRadius: BorderRadius.circular(30),
             ),
             child: TextFormField(
+              controller: emilEditingController,
               keyboardType: TextInputType.text,
               style: const TextStyle(
                 color: Colors.black87,
@@ -95,6 +107,7 @@ class _RegisterPageState extends State<RegisterPage> {
               borderRadius: BorderRadius.circular(30),
             ),
             child: TextFormField(
+              controller: password1EditingController,
               keyboardType: TextInputType.text,
               obscureText: true,
               style: const TextStyle(
@@ -128,6 +141,7 @@ class _RegisterPageState extends State<RegisterPage> {
               borderRadius: BorderRadius.circular(30),
             ),
             child: TextFormField(
+              controller: password2EditingController,
               keyboardType: TextInputType.text,
               obscureText: true,
               style: const TextStyle(
@@ -146,7 +160,7 @@ class _RegisterPageState extends State<RegisterPage> {
         ]);
   }
 
-  Widget _buildLoginButton() {
+  Widget _buildRegButton() {
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
       children: <Widget>[
@@ -155,7 +169,106 @@ class _RegisterPageState extends State<RegisterPage> {
           width: 5 * (MediaQuery.of(context).size.width / 7),
           margin: const EdgeInsets.only(top: 25),
           child: ElevatedButton(
-            onPressed: () {},
+            onPressed: () {
+              username = usernameEditingController.text;
+              email = emilEditingController.text;
+              password1 = password1EditingController.text;
+              password2 = password2EditingController.text;
+
+              regUser(un, em, pw, pw2) async {
+                const String mainURL =
+                    'https://covidstatustracker.herokuapp.com/api/';
+                final prefs = await SharedPreferences.getInstance();
+                const url = mainURL + 'register';
+                var reqBody = {
+                  'username': un,
+                  'email': em,
+                  'password1': pw,
+                  'password2': pw2,
+                };
+
+                http.Response response = await http.post(
+                  Uri.parse(url),
+                  body: reqBody,
+                );
+                if (response.statusCode == 200) {
+                  Map<String, dynamic> responseJson =
+                      json.decode(response.body);
+                  if (responseJson['Message'] == 'Success') {
+                    prefs.setString('username', un);
+                    prefs.setString('password', pw);
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                          builder: (context) => const EditProfilePage()),
+                    );
+                  } else {
+                    prefs.setString('username', 'none');
+                    prefs.setString('password', 'none');
+                    Future<void> _showMyDialog() async {
+                      return showDialog<void>(
+                        context: context,
+                        barrierDismissible: true,
+                        builder: (BuildContext context) {
+                          return AlertDialog(
+                            title: const Text('Registraion Error'),
+                            content: SingleChildScrollView(
+                              child: ListBody(
+                                children: <Widget>[
+                                  Text(responseJson['errors']),
+                                ],
+                              ),
+                            ),
+                            actions: <Widget>[
+                              TextButton(
+                                child: const Text('OK'),
+                                onPressed: () {
+                                  Navigator.of(context).pop();
+                                },
+                              ),
+                            ],
+                          );
+                        },
+                      );
+                    }
+
+                    _showMyDialog();
+                  }
+                } else {
+                  Future<void> _showMyDialog() async {
+                    return showDialog<void>(
+                      context: context,
+                      barrierDismissible: true,
+                      builder: (BuildContext context) {
+                        return AlertDialog(
+                          title: const Text('Error'),
+                          content: SingleChildScrollView(
+                            child: ListBody(
+                              children: const <Widget>[
+                                Text('Failed to connect to the server.'),
+                                Text('Please try again later'),
+                              ],
+                            ),
+                          ),
+                          actions: <Widget>[
+                            TextButton(
+                              child: const Text('OK'),
+                              onPressed: () {
+                                Navigator.of(context).pop();
+                              },
+                            ),
+                          ],
+                        );
+                      },
+                    );
+                  }
+
+                  _showMyDialog();
+                }
+              }
+
+              regUser(username, email, password1, password2);
+            },
             child: Text(
               "REGISTER",
               style: TextStyle(
@@ -273,7 +386,7 @@ class _RegisterPageState extends State<RegisterPage> {
                 _buildEmailRow(),
                 _buildPasswordRow(),
                 _buildReenterPasswordRow(),
-                _buildLoginButton(),
+                _buildRegButton(),
                 _buildAlreadyButton(),
                 _buildSocialBtnRow(),
                 _buildhomeButton(),
