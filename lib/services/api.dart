@@ -8,21 +8,23 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 const String mainURL = 'https://covidstatustracker.herokuapp.com/api/';
 
+//get data for the home page
 Future<Homedata> fetchHome() async {
-  final prefs = await SharedPreferences.getInstance();
+  final prefs = await SharedPreferences.getInstance(); //getting username and passwword saved in local storage
   final un = prefs.getString('username') ?? 'none';
   final pw = prefs.getString('password') ?? 'none';
-  var url = mainURL + 'home?username=' + un + '&password=' + pw;
-  final response = await http.get(Uri.parse(url));
+  var url = mainURL + 'home?username=' + un + '&password=' + pw; 
+  final response = await http.get(Uri.parse(url)); //calling the url
   if (response.statusCode == 200) {
-    return Homedata.fromJson(jsonDecode(response.body));
+    return Homedata.fromJson(jsonDecode(response.body)); 
   } else {
     throw Exception('Failed to load');
   }
 }
 
+//get data for the profile page
 Future<Profiledata> fetchProf() async {
-  final prefs = await SharedPreferences.getInstance();
+  final prefs = await SharedPreferences.getInstance(); //getting username and passwword saved in local storage
   final un = prefs.getString('username') ?? 'none';
   final pw = prefs.getString('password') ?? 'none';
   var url = mainURL + 'profile?username=' + un + '&password=' + pw;
@@ -34,6 +36,7 @@ Future<Profiledata> fetchProf() async {
   }
 }
 
+//get data for the symptom tracker
 Future<Trackerdata> fetchTracker() async {
   final prefs = await SharedPreferences.getInstance();
   final un = prefs.getString('username') ?? 'none';

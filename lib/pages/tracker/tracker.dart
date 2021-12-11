@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'package:cst/models/trackerdata.dart';
 import 'package:cst/pages/tracker/dailysession.dart';
+import 'package:cst/services/notification.dart';
 import 'package:http/http.dart' as http;
 import 'package:cst/services/api.dart';
 import 'package:cst/widgets/drawer.dart';
@@ -11,7 +12,9 @@ import 'package:url_launcher/url_launcher.dart';
 
 // ignore: camel_case_types
 class tracker extends StatefulWidget {
-  const tracker({Key? key}) : super(key: key);
+  const tracker({
+    Key? key,
+  }) : super(key: key);
 
   @override
   Trackerstate createState() => Trackerstate();
@@ -69,6 +72,7 @@ class Trackerstate extends State<tracker> {
               ElevatedButton(
                 onPressed: () {
                   fetchSession() async {
+                    NotificationAPI().symptomNotification();
                     const String mainURL =
                         'https://covidstatustracker.herokuapp.com/api/';
                     final prefs = await SharedPreferences.getInstance();
@@ -454,6 +458,7 @@ class Trackerstate extends State<tracker> {
                         ElevatedButton(
                           onPressed: () {
                             endses() async {
+                              NotificationAPI().cancelsymptomNotification();
                               const String mainURL =
                                   'https://covidstatustracker.herokuapp.com/api/';
                               final prefs =

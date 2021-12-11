@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:cst/services/api.dart';
 import 'package:cst/widgets/drawer.dart';
 import 'package:flutter/material.dart';
@@ -18,11 +19,12 @@ class MapPage extends StatefulWidget {
 class _MapPageState extends State<MapPage> {
   late Future<List> mapdata;
   List<Marker> citymarkers = [];
+  List<Marker> revmarkers = [];
+  Timer? timer;
 
   @override
   void initState() {
     super.initState();
-
     Future<List> getmapdata() async {
       final prefs = await SharedPreferences.getInstance();
       final long = prefs.getDouble('longitude') ?? 80.70;
@@ -40,7 +42,6 @@ class _MapPageState extends State<MapPage> {
         }
       });
       await _islocationon();
-      print('returned');
       return Future<List>.value([long, lat, zoom, loc]);
     }
 
@@ -111,13 +112,12 @@ class _MapPageState extends State<MapPage> {
         ),
       ));
     }
+    revmarkers = citymarkers.reversed.toList();
   }
 
   _islocationon() async {
     var currentLocation = await _determinePosition();
-    print(currentLocation);
     if (currentLocation == 'disabled') {
-      print('dissabl');
       alert() {
         return showDialog<void>(
             context: context,
@@ -146,18 +146,36 @@ class _MapPageState extends State<MapPage> {
 
       alert();
     } else {
-      print('enable');
       citymarkers.add(Marker(
-        point: LatLng(currentLocation[0], currentLocation[1]),
+        point: LatLng(currentLocation.latitude, currentLocation.longitude),
         builder: (context) => IconButton(
             icon: const Icon(Icons.location_on),
             color: Colors.red,
-            iconSize: 15.0,
-            onPressed: () {}),
+            iconSize: 23.0,
+            onPressed: () {
+              alert() {
+                return showDialog<void>(
+                    context: context,
+                    barrierDismissible: true,
+                    builder: (BuildContext context) {
+                      return AlertDialog(
+                        title: const Text("Your Location"),
+                        actions: <Widget>[
+                          TextButton(
+                            child: const Text('OK'),
+                            onPressed: () {
+                              Navigator.of(context).pop();
+                            },
+                          ),
+                        ],
+                      );
+                    });
+              }
+
+              alert();
+            }),
       ));
     }
-    print('returning');
-    return 0;
   }
 
   @override
@@ -214,7 +232,7 @@ class _MapPageState extends State<MapPage> {
                                 'id': 'mapbox.mapbox-streets-v7',
                               },
                             ),
-                            MarkerLayerOptions(markers: citymarkers),
+                            MarkerLayerOptions(markers: revmarkers),
                           ],
                         ),
                       ),

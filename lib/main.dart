@@ -1,8 +1,10 @@
 import 'package:cst/pages/main/home.dart';
 import 'package:cst/widgets/drawer.dart';
 import 'package:flutter/material.dart';
+import 'package:timezone/data/latest.dart' as tz;
 
-void main() {
+void main() async {
+  tz.initializeTimeZones();
   runApp(const CST());
 }
 

@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:cst/models/homedata.dart';
 import 'package:cst/pages/accounts/login.dart';
 import 'package:cst/pages/main/home.dart';
@@ -5,14 +7,71 @@ import 'package:cst/pages/map/map.dart';
 import 'package:cst/pages/tracker/profile.dart';
 import 'package:cst/pages/tracker/tracker.dart';
 import 'package:cst/services/api.dart';
+import 'package:cst/services/notification.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:geolocator/geolocator.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:toggle_switch/toggle_switch.dart';
 
 // ignore: must_be_immutable
 class NavigationDrawerWidget extends StatelessWidget {
   NavigationDrawerWidget({Key? key}) : super(key: key);
   late Future<Homedata> futurehome = fetchHome();
+  late Timer timer;
+  late int toggle = 0;
+
+  void init() async {
+    final prefs = await SharedPreferences.getInstance();
+    toggle = prefs.getInt('switch') ?? 0;
+  }
+
+  mapnotifications() async {
+    fetchMap().then((items) {
+      _determinePosition().then((value) {
+        for (var each in items) {
+          if (value != 'disabled') {
+            var distance = Geolocator.distanceBetween(
+                each.lat, each.long, value.latitude, value.longitude);
+
+            if (distance <= 5000) {
+              if (each.count > 500) {
+                NotificationAPI.mapNotification(
+                    body: 'There are ' +
+                        each.count.toString() +
+                        ' number of patients in ' +
+                        each.city);
+              }
+            }
+          }
+        }
+      });
+    });
+  }
+
+  _determinePosition() async {
+    bool serviceEnabled;
+    LocationPermission permission;
+    // Test if location services are enabled.
+    serviceEnabled = await Geolocator.isLocationServiceEnabled();
+    if (!serviceEnabled) {
+      return 'disabled';
+    }
+
+    permission = await Geolocator.checkPermission();
+    if (permission == LocationPermission.denied) {
+      permission = await Geolocator.requestPermission();
+      if (permission == LocationPermission.denied) {
+        return 'disabled';
+      }
+    }
+
+    if (permission == LocationPermission.deniedForever) {
+      return 'disabled';
+    }
+
+    return await Geolocator.getCurrentPosition();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -37,6 +96,45 @@ class NavigationDrawerWidget extends StatelessWidget {
                           color: Colors.lightBlue[50])),
                 ],
               )),
+          Card(
+              child: Row(
+            children: [
+              Text(
+                'Critical Area Alerts',
+                style: TextStyle(
+                  fontSize: 18,
+                  letterSpacing: 0.5,
+                  color: Colors.blue[900],
+                ),
+              ),
+              ToggleSwitch(
+                initialLabelIndex: toggle,
+                minWidth: 50.0,
+                cornerRadius: 15.0,
+                activeBgColors: const [
+                  [Colors.blueGrey],
+                  [Colors.cyan]
+                ],
+                activeFgColor: Colors.white,
+                inactiveBgColor: Colors.grey,
+                inactiveFgColor: Colors.white,
+                totalSwitches: 2,
+                labels: const ['OFF', 'ON'],
+                onToggle: (index) async {
+                  final prefs = await SharedPreferences.getInstance();
+                  if (index == 1) {
+                    prefs.setInt('switch', 1);
+                    mapnotifications();
+                    timer = Timer.periodic(const Duration(minutes: 5),
+                        (Timer t) => {mapnotifications()});
+                  } else {
+                    prefs.setInt('switch', 0);
+                    timer.cancel();
+                  }
+                },
+              ),
+            ],
+          )),
           Card(
             child: ListTile(
               title: Text(
@@ -270,12 +368,12 @@ class NavigationDrawerWidget extends StatelessWidget {
                             onPressed: () {
                               prefs.setString('username', 'none');
                               prefs.setString('password', 'none');
+                              Navigator.of(context).pop();
                               Navigator.push(
                                 context,
                                 MaterialPageRoute(
                                     builder: (context) => const HomePage()),
                               );
-                              Navigator.of(context).pop();
                             },
                           ),
                         ],

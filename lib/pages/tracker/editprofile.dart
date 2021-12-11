@@ -103,16 +103,19 @@ class _EditProfilePageState extends State<EditProfilePage> {
                                         children: <Widget>[
                                           Container(
                                               margin: const EdgeInsets.only(
-                                                  top: 0)),
-                                          Text(
-                                            "Please complete the following form",
-                                            style: TextStyle(
-                                              fontSize: MediaQuery.of(context)
-                                                      .size
-                                                      .height /
-                                                  40,
-                                              letterSpacing: 1.0,
-                                              color: Colors.black,
+                                                  top: 0, bottom: 30)),
+                                          Card(
+                                            color: Colors.blue[200],
+                                            child: Text(
+                                              "Please complete the following form",
+                                              style: TextStyle(
+                                                fontSize: MediaQuery.of(context)
+                                                        .size
+                                                        .height /
+                                                    35,
+                                                letterSpacing: 1.0,
+                                                color: Colors.black,
+                                              ),
                                             ),
                                           ),
                                         ],
